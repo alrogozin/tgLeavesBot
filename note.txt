@@ -1,0 +1,8 @@
+npm i node-telegram-bot-api
+
+https://codesandbox.io/s/github/yagop/node-telegram-bot-api/tree/master/?file=/src/telegram.js
+
+NB!!! про ОРМ sequelize https://habr.com/ru/post/565062/
+
+Telegram bot example with ORM - UserModel, sequelize etc!
+https://codesandbox.io/s/github/utimur/telegram-bot-course/tree/master/?file=/models.js:64-73
