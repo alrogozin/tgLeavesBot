@@ -19,7 +19,7 @@ class lvsAuth {
 			ustt_id: 10
 		},
 		{
-			id: 92967198,
+			id: 792967198,
 			user_fio: "Фридрих С.В.",
 			ustt_id: 90
 		},

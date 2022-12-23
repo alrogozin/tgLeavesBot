@@ -144,7 +144,12 @@ async function is_exist_jopex (pUrqId) {
 
 async function do_get_info (pUrqId) {
 	oraMng = new jopex.Ora();
-	let ret = await oraMng.getTaskInfo(pUrqId);
+	let ret = "";
+	try{
+		ret = await oraMng.getTaskInfo(pUrqId);
+	} catch(err) {
+		ret = err.message;
+	}
 	// let ret = await ret0.getData();
 	return ret;
 }
@@ -172,7 +177,7 @@ runner();
 // =========================
 
 // do_get_info(8).then((r) => {
-// 	console.log(r);
+// 	console.log(urlencode.decode(r));
 // })
 
 

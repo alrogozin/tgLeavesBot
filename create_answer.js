@@ -69,7 +69,7 @@ class Ora {
 			throw(err);
 		};
 		// console.log(connection.oracleServerVersionString);
-		console.log(`Ok client version: ` + oracledb.oracleClientVersionString);
+		// console.log(`Ok client version: ` + oracledb.oracleClientVersionString);
 
 		try {
 
@@ -129,12 +129,14 @@ async getTaskInfo(pUrqId) {
 			{
 				p_task_id: 	pUrqId,
 				p_markup: 	"HTML",
-				result: { dir: oracledb.BIND_OUT, type: oracledb.CLOB }
+				result: { dir: oracledb.BIND_OUT, type: oracledb.DB_TYPE_VARCHAR, maxSize: 32767 }
 			}
 		 );
-		return await result.outBinds.result.getData();
+		// return await result.outBinds.result.getData();
+		return await result.outBinds.result;
 	} catch (err) {
 		console.error(err);
+		throw err;
 	  } finally {
 		if (connection) {
 		  try {
