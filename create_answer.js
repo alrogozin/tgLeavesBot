@@ -69,6 +69,7 @@ class Ora {
 			throw(err);
 		};
 		// console.log(connection.oracleServerVersionString);
+		console.log(`Ok client version: ` + oracledb.oracleClientVersionString);
 
 		try {
 
@@ -95,7 +96,57 @@ class Ora {
 		return mRetValue;
 	}
 
-	async createAnswer(pUser, pUrqId, pMsg, pUsttId) {
+
+// 	begin
+// 	-- Call the function
+// 	:result := get_jopex_task_info(p_task_id => :p_task_id,
+// 								   p_markup => :p_markup);
+//   end;
+
+async getTaskInfo(pUrqId) {
+	let connection;
+
+	try {
+		connection = await oracledb.getConnection( {
+		  user          : "mvk",
+		  password      : "mvkprod$",
+		  connectString : oraConnectString
+		})
+	} catch(err) {
+		throw(err + ' pUrqId:' + pUrqId);
+	};
+
+	  try {
+
+		const result = await connection.execute(
+			`Begin
+				:result := get_jopex_task_info(
+												p_task_id 	=> :p_task_id,
+			 								   	p_markup 	=> :p_markup
+												);
+			End;
+			`,
+			{
+				p_task_id: 	pUrqId,
+				p_markup: 	"HTML",
+				result: { dir: oracledb.BIND_OUT, type: oracledb.CLOB }
+			}
+		 );
+		return await result.outBinds.result.getData();
+	} catch (err) {
+		console.error(err);
+	  } finally {
+		if (connection) {
+		  try {
+			await connection.close();
+		  } catch (err) {
+			console.error(err);
+		  }
+		}
+	}
+}
+
+async createAnswer(pUser, pUrqId, pMsg, pUsttId) {
 		// let usttId = this.getUsttId(pUser);
 		let connection;
 
