@@ -4,29 +4,16 @@
 // https://node-oracledb.readthedocs.io/en/latest/user_guide/introduction.html#getting-started-with-node-oracledb
 
 const oracledb = require('oracledb');
+const Config = require(`./config.js`).Config;
 
-const oraConnectString = `(DESCRIPTION =
-	(ADDRESS_LIST =
-	  (ADDRESS = (PROTOCOL = TCP)(HOST = 172.16.27.9)(PORT = 1521))
-	)
-	(CONNECT_DATA =
-	  (SERVICE_NAME = billapp)
-	)
-  )
-`;
 
-/*
-// Daily11G2:
-			  const oraConnectString = `(DESCRIPTION =
-					 (ADDRESS_LIST =
-					   (ADDRESS = (PROTOCOL = TCP)(HOST = 172.16.191.4)(PORT = 1521))
-					   (ADDRESS = (PROTOCOL = TCP)(HOST = 172.16.191.5)(PORT = 1521))
-					 )
-					   (CONNECT_DATA =
-						 (SERVICE_NAME = BILLTEST)
-					 )
-				   )`
-*/
+const Cfg = new Config(`./db/local.db`);
+Cfg.get_orcl().then(() => {
+	// console.log(`User:`, Cfg.OraConnection.connection_string);
+})
+.catch((err)=>{
+	console.log(err);
+})
 
 class Ora {
 	// connection;
@@ -35,9 +22,9 @@ class Ora {
  
 		  try {
 			this.connection = await oracledb.getConnection( {
-			  user          : "mvk",
-			  password      : "mvkprod$",
-			  connectString : oraConnectString
+			  user          : Cfg.OraConnection.user,
+			  password      : Cfg.OraConnection.password,
+			  connectString : Cfg.OraConnection.connection_string
 			})
 		} catch(err) {
 			throw(err);
@@ -61,10 +48,10 @@ class Ora {
 		// await this.connect();
 		try {
 			connection = await oracledb.getConnection( {
-			  user          : "mvk",
-			  password      : "mvkprod$",
-			  connectString : oraConnectString
-			})
+				user          : Cfg.OraConnection.user,
+				password      : Cfg.OraConnection.password,
+				connectString : Cfg.OraConnection.connection_string
+			  })
 		} catch(err) {
 			throw(err);
 		};
@@ -108,10 +95,10 @@ async getTaskInfo(pUrqId) {
 
 	try {
 		connection = await oracledb.getConnection( {
-		  user          : "mvk",
-		  password      : "mvkprod$",
-		  connectString : oraConnectString
-		})
+			user          : Cfg.OraConnection.user,
+			password      : Cfg.OraConnection.password,
+			connectString : Cfg.OraConnection.connection_string
+	  })
 	} catch(err) {
 		throw(err + ' pUrqId:' + pUrqId);
 	};
@@ -132,7 +119,6 @@ async getTaskInfo(pUrqId) {
 				result: { dir: oracledb.BIND_OUT, type: oracledb.DB_TYPE_VARCHAR, maxSize: 32767 }
 			}
 		 );
-		// return await result.outBinds.result.getData();
 		return await result.outBinds.result;
 	} catch (err) {
 		console.error(err);
@@ -156,10 +142,10 @@ async createAnswer(pUser, pUrqId, pMsg, pUsttId) {
 		
 		try {
 			connection = await oracledb.getConnection( {
-			  user          : "mvk",
-			  password      : "mvkprod$",
-			  connectString : oraConnectString
-			})
+				user          : Cfg.OraConnection.user,
+				password      : Cfg.OraConnection.password,
+				connectString : Cfg.OraConnection.connection_string
+			  })
 		} catch(err) {
 			throw(err + ' pUrqId:' + pUrqId);
 		};
@@ -185,6 +171,50 @@ async createAnswer(pUser, pUrqId, pMsg, pUsttId) {
 
 		} catch (err) {
 			console.error(err);
+		  } finally {
+			if (connection) {
+			  try {
+				await connection.close();
+			  } catch (err) {
+				console.error(err);
+			  }
+			}
+		}
+	}
+	
+	async getLastUnRead(pMode) {
+		let connection;
+	
+		try {
+			connection = await oracledb.getConnection( {
+				user          : Cfg.OraConnection.user,
+				password      : Cfg.OraConnection.password,
+				connectString : Cfg.OraConnection.connection_string
+			  })
+		} catch(err) {
+			throw(err + ' pUrqId:' + pUrqId);
+		};
+	
+		  try {
+	
+			const result = await connection.execute(
+				`Begin
+					:result := get_jopex_last_unread(
+													p_mode 	=> :p_mode,
+													p_count => 5
+													);
+				End;
+				`,
+				{
+					p_mode: 	pMode,
+					result: { dir: oracledb.BIND_OUT, type: oracledb.DB_TYPE_VARCHAR, maxSize: 32767 }
+				}
+			 );
+			// return await result.outBinds.result.getData();
+			return await result.outBinds.result;
+		} catch (err) {
+			console.error(err);
+			throw err;
 		  } finally {
 			if (connection) {
 			  try {

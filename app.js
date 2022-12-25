@@ -5,23 +5,29 @@ const TelegramBot = require('node-telegram-bot-api');
 const jopex = require(`./create_answer`);
 const Auth = require(`./auth`);
 var urlencode = require('urlencode');
+const Config = require(`./config.js`).Config;
 
-// replace the value below with the Telegram token you receive from @BotFather
-const token = '5816881379:AAEYDwLQALusr_QQU8M5qIEQe13ejkfcUgE';
 
-// Create a bot that uses 'polling' to fetch new updates
-const bot = new TelegramBot(token, {polling: true});
-
-bot.setMyCommands([
-	{command: '/start', 	description: 'Starting...'},
-	{command: '/task_info',	description: 'Печать задачи'},
-	{command: '/jopex', 	description: 'Ответ в Журнал'},
-	// {command: '/about', 	description: 'О приложении'},
-	// {command: '/report', 	description: 'Сформировать отчет'},
-])
+const Cfg = new Config(`./db/local.db`);
 
 
 async function runner() {
+
+	await Cfg.get_bot_token();
+	const token = Cfg.botToken;
+	
+	// Create a bot that uses 'polling' to fetch new updates
+	const bot = new TelegramBot(token, {polling: true});
+	
+	bot.setMyCommands([
+		{command: '/start', 	description: 'Starting...'},
+		{command: '/task_info',	description: 'Печать задачи'},
+		{command: '/jopex', 	description: 'Ответ в Журнал'},
+		{command: '/last', 		description: 'Посл.10 без ответа'},
+		// {command: '/about', 	description: 'О приложении'},
+		// {command: '/report', 	description: 'Сформировать отчет'},
+	])
+	
 	oraMng = new jopex.Ora();
 	bot.on('message', async msg => {	
 		const text = msg.text;
@@ -55,8 +61,8 @@ async function runner() {
 											,{ 
 												parse_mode: "HTML",
 											}
-											)
-	
+											);
+											console.log(`getTaskInfo ${new Date().toISOString()} urq:${mUrqId} user:${lvsAuth.currentUser.user_fio}`);	
 										})
 										.catch(err => bot.sendMessage(chatId, err.message))
 								})
@@ -99,7 +105,7 @@ async function runner() {
 												do_jopex(mUrqId, message.text, lvsAuth.currentUser.ustt_id)
 													.then(()=>{
 															bot.sendMessage(chatId, `Запись в журнале создана`)
-															console.log(`Запись создана #${mUrqId} "${message.text}"`);
+															console.log(`New msg ${new Date().toISOString()} urq:${mUrqId} user:${lvsAuth.currentUser.user_fio} "${message.text}"`);
 														})
 													.catch((err) => {
 															bot.sendMessage(chatId, `Ошибка ${err.message}`);
@@ -114,6 +120,28 @@ async function runner() {
 
 					return;
 				}
+				if (text === '/last') {
+
+					if(lvsAuth.currentUser.ustt_id == 0) {
+						console.log(`У Вас нет полномочий для выполнения команды. chat_id:${chatId}`);
+						bot.sendMessage(chatId, `У Вас нет полномочий для выполнения команды. Для получения информации: @alrog`);
+						return;
+					}
+					do_get_last(lvsAuth.currentUser.def_last_mode)
+						.then((res) => {
+						bot.sendMessage(chatId, urlencode.decode(res)
+							,{ 
+								parse_mode: "HTML",
+							}
+							)
+							console.log(`getLast ${new Date().toISOString()} user:${lvsAuth.currentUser.user_fio}`);
+						})
+
+						.catch(err => bot.sendMessage(chatId, err.message))
+					return;
+	
+				}
+	
 			if (text === '/report') {
 				console.log(text);
 				return;
@@ -154,6 +182,18 @@ async function do_get_info (pUrqId) {
 	return ret;
 }
 
+async function do_get_last (pMode) {
+	oraMng = new jopex.Ora();
+	let ret = "";
+	try{
+		ret = await oraMng.getLastUnRead(pMode);
+	} catch(err) {
+		ret = err.message;
+	}
+	// let ret = await ret0.getData();
+	return ret;
+}
+
 async function do_jopex (pUrqId, pMsg, pUsttId) {
 	oraMng = new jopex.Ora();
 	await oraMng.createAnswer('alrog', pUrqId, pMsg, pUsttId);
@@ -176,7 +216,7 @@ runner(mUrqId, `Вот еще один пример!`);
 runner();
 // =========================
 
-// do_get_info(8).then((r) => {
+// do_get_last("RD").then((r) => {
 // 	console.log(urlencode.decode(r));
 // })
 

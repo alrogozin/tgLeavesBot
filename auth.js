@@ -16,17 +16,20 @@ class lvsAuth {
 		{
 			id: 659633971,
 			user_fio: "Лоуцкер Е.В.",
-			ustt_id: 10
+			ustt_id: 10,
+			def_last_mode: 'ALL'
 		},
 		{
 			id: 792967198,
 			user_fio: "Фридрих С.В.",
-			ustt_id: 90
+			ustt_id: 90,
+			def_last_mode: 'RD'
 		},
 		{
 			id: 159448512,
 			user_fio: "Рогозин А.Р.",
-			ustt_id: 50
+			ustt_id: 50,
+			def_last_mode: 'RD'
 		},
 /*
 		{

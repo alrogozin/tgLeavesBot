@@ -2,6 +2,7 @@
   "dependencies": {
     "node-telegram-bot-api": "^0.60.0",
     "oracledb": "^5.5.0",
+    "sqlite3": "^5.1.4",
     "urlencode": "^1.1.0"
   }
 }
