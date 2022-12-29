@@ -4,8 +4,11 @@
 const TelegramBot = require('node-telegram-bot-api');
 const jopex = require(`./create_answer`);
 const Auth = require(`./auth`);
+const pdf = require(`./pdf.js`);
 var urlencode = require('urlencode');
 const Config = require(`./config.js`).Config;
+const fs = require(`fs`);
+var randomFile = require('random-file');
 
 
 const Cfg = new Config(`./db/local.db`);
@@ -13,7 +16,8 @@ const Cfg = new Config(`./db/local.db`);
 
 async function runner() {
 
-	await Cfg.get_bot_token();
+	// await Cfg.get_bot_token("ALROGPET");
+	await Cfg.get_bot_token("BOT");
 	const token = Cfg.botToken;
 	
 	// Create a bot that uses 'polling' to fetch new updates
@@ -24,8 +28,7 @@ async function runner() {
 		{command: '/task_info',	description: 'Печать задачи'},
 		{command: '/jopex', 	description: 'Ответ в Журнал'},
 		{command: '/last', 		description: 'Посл.10 без ответа'},
-		// {command: '/about', 	description: 'О приложении'},
-		// {command: '/report', 	description: 'Сформировать отчет'},
+		{command: '/task2pdf',	description: 'Задача в pdf'},
 	])
 	
 	oraMng = new jopex.Ora();
@@ -55,7 +58,7 @@ async function runner() {
 							let mUrqId = message.text;
 							is_exist_jopex(mUrqId)
 								.then(()=>{
-									do_get_info(mUrqId)
+									do_get_info(mUrqId,"HTML")
 										.then((res) => {
 										bot.sendMessage(chatId, urlencode.decode(res)
 											,{ 
@@ -114,7 +117,10 @@ async function runner() {
 											})
 										})
 									})
-									.catch(err => bot.sendMessage(chatId, err.message))
+									.catch((err) => {
+										bot.sendMessage(chatId, err.message);
+										console.error(err.message);
+									})
 								})
 							})
 
@@ -142,6 +148,43 @@ async function runner() {
 	
 				}
 	
+			// -------------------------
+			if (text === '/task2pdf') {
+
+				if(lvsAuth.currentUser.ustt_id == 0) {
+					console.log(`У Вас нет полномочий для выполнения команды. chat_id:${chatId}`);
+					bot.sendMessage(chatId, `У Вас нет полномочий для выполнения команды. Для получения информации: @alrog`);
+					return;
+				}
+				bot.sendMessage(chatId, `Укажите номер задачи:`, { reply_markup: JSON.stringify({ force_reply: true }),})
+				.then(function(sended) {
+						bot.onReplyToMessage(sended.chat.id, sended.message_id, function (message) {
+							let mUrqId = message.text;
+							is_exist_jopex(mUrqId)
+								.then(()=>{
+									// let fname = randomFile({extension: 'pdf' });
+									fname = "task#" + message.text+".pdf";
+									do_get_info(mUrqId, "PLAIN")
+										.then((res) => {
+											let ab = pdf.formPDF(res, fname);
+											bot.sendDocument(chatId, fname, {
+												filename: fname,
+												contentType: "application/pdf"
+											}).then(() => {
+												console.log(`getTaskInfo ${new Date().toISOString()} urq:${mUrqId} user:${lvsAuth.currentUser.user_fio}`);	
+												fs.unlinkSync(fname);
+											})
+										})
+										.catch(err => bot.sendMessage(chatId, err.message))
+								})
+								.catch(err => bot.sendMessage(chatId, err.message))
+							})
+						})
+
+				return;
+			}
+
+ 			// -------------------------
 			if (text === '/report') {
 				console.log(text);
 				return;
@@ -170,11 +213,11 @@ async function is_exist_jopex (pUrqId) {
 	}
 }
 
-async function do_get_info (pUrqId) {
+async function do_get_info (pUrqId, pMarkUp) {
 	oraMng = new jopex.Ora();
 	let ret = "";
 	try{
-		ret = await oraMng.getTaskInfo(pUrqId);
+		ret = await oraMng.getTaskInfo(pUrqId, pMarkUp);
 	} catch(err) {
 		ret = err.message;
 	}
@@ -219,6 +262,7 @@ runner();
 // do_get_last("RD").then((r) => {
 // 	console.log(urlencode.decode(r));
 // })
+
 
 
 /*

@@ -45,6 +45,10 @@ class Ora {
 	async isExistUrq(pUrqId) {
 		let mRetValue, connection;
 
+		if (!Number.isInteger(parseInt(pUrqId))) {
+			throw new Error(`${pUrqId} is not integer value`);
+		}
+		
 		// await this.connect();
 		try {
 			connection = await oracledb.getConnection( {
@@ -90,7 +94,7 @@ class Ora {
 // 								   p_markup => :p_markup);
 //   end;
 
-async getTaskInfo(pUrqId) {
+async getTaskInfo(pUrqId, pMarkUp) {
 	let connection;
 
 	try {
@@ -115,7 +119,7 @@ async getTaskInfo(pUrqId) {
 			`,
 			{
 				p_task_id: 	pUrqId,
-				p_markup: 	"HTML",
+				p_markup: 	pMarkUp,
 				result: { dir: oracledb.BIND_OUT, type: oracledb.DB_TYPE_VARCHAR, maxSize: 32767 }
 			}
 		 );

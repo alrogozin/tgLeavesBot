@@ -11,8 +11,14 @@ class Config {
 	};
 	botToken;
 
-	get_bot_token() {
+	get_bot_token(p_mode) {
 		return new Promise((resolve, reject) =>{
+			let mCfgAbbr;
+			if  (p_mode=="ALROGPET") {
+				mCfgAbbr = "BOT_TOKEN_TEST";
+			} else {
+				mCfgAbbr = "BOT_TOKEN"
+			}
 
 			let db = new sqlite3.Database(this.dbfilePath, sqlite3.OPEN_READONLY, (err) => {
 				if (err) {
@@ -22,13 +28,14 @@ class Config {
 			
 			return db.each(`SELECT *
 						FROM cmn_config
-						Where grp_abbr='TG'
+						Where abbr = '${mCfgAbbr}'
 						`, (err, row) => {
 				if (err) {
 					return reject(err.message);
 				}
 				// console.log(row.grp_abbr+ "\t" + row.abbr + "\t" + row.name);
-				if (row.abbr == "BOT_TOKEN") {
+				
+				if (row.abbr == mCfgAbbr) {
 					this.botToken = row.val;
 				}
 
