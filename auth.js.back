@@ -9,7 +9,6 @@
 295778	Круглов С.А.	
 459828	Круглова А.А.			akruglova@leaves.ru           
 2341015	Потопаева Н.А.			NPotopaeva@leaves.ru          
-9805 Бурлова Л.И. 			LBurlova@leaves.ru    
 */
 class lvsAuth {
 	currentUser;
@@ -39,13 +38,12 @@ class lvsAuth {
 			ustt_id: 2341015,
 			def_last_mode: 'RD'
 		},
-		{
-			id: 5264960816,
-			user_fio: "Бурлова Л.И.",
-			ustt_id:  9805,
-			def_last_mode: 'ALL'
-		},
 /*
+		{
+			id: ,
+			user_fio: "",
+			ustt_id: 
+		},
 		{
 			id: ,
 			user_fio: "",
